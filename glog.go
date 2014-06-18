@@ -83,25 +83,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
-	"unsafe"
 )
-
-// isatty returns true if f is a TTY, false otherwise.
-func isatty(f *os.File) bool {
-	switch runtime.GOOS {
-	case "darwin":
-	case "linux":
-	default:
-		return false
-	}
-	var t [2]byte
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		f.Fd(), syscall.TIOCGPGRP,
-		uintptr(unsafe.Pointer(&t)))
-	return errno == 0
-}
 
 // severity identifies the sort of log: info, warning etc. It also implements
 // the flag.Value interface. The -stderrthreshold flag is of type severity and
@@ -419,7 +402,7 @@ func init() {
 
 	// Default stderrThreshold is ERROR.
 	logging.stderrThreshold = errorLog
-	logging.color = isatty(os.Stderr)
+	logging.color = false
 
 	logging.setVState(0, nil, false)
 	go logging.flushDaemon()
@@ -448,6 +431,11 @@ func SetLogstashURL(value string) {
 // Programatic Method to set logging verbosity
 func SetVerbosity(value int) {
 	logging.verbosity = Level(value)
+}
+
+// Programatic Method to set logging verbosity
+func SetColorOutput(value bool) {
+	logging.color = value
 }
 
 // Programatic Method to set logging verbosity
